@@ -1,0 +1,164 @@
+:root {
+  color-scheme: dark;
+}
+
+body {
+  width: 420px;
+  margin: 0;
+  padding: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 13px;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.topo h1 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.contador {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #134e4a;
+  color: #5eead4;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.vazio {
+  margin: 16px 4px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.item {
+  padding: 8px 10px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #111c31;
+}
+
+.item--descartado {
+  opacity: 0.45;
+}
+
+.item__topo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.item__nome {
+  flex: 1;
+  font-weight: 600;
+}
+
+.item__origem {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.item__detalhe {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item__controles {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.campo,
+.selecao {
+  padding: 3px 6px;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 11px;
+}
+
+.campo {
+  width: 88px;
+}
+
+.remover {
+  margin-left: auto;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #f87171;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.acoes {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.botao {
+  flex: 1;
+  padding: 7px 8px;
+  border: 1px solid #1e293b;
+  border-radius: 7px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao:hover:not(:disabled) {
+  background: #334155;
+}
+
+.botao:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.botao--primario {
+  background: #0d9488;
+  border-color: #0d9488;
+  color: #f0fdfa;
+}
+
+.botao--perigo {
+  color: #f87171;
+}
+
+.status {
+  min-height: 16px;
+  margin: 6px 2px 0;
+  color: #5eead4;
+  font-size: 11px;
+}

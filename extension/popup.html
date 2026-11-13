@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="topo">
+      <h1>Leads capturados</h1>
+      <span id="contador" class="contador">0</span>
+    </header>
+
+    <p id="vazio" class="vazio">
+      Nenhum lead ainda. Abra o Google Maps ou um perfil do Instagram e use a barra
+      <strong>CRM</strong> no canto inferior direito.
+    </p>
+
+    <ul id="lista" class="lista"></ul>
+
+    <footer class="acoes">
+      <button id="copiar" type="button" class="botao botao--primario">Copiar CSV</button>
+      <button id="baixar" type="button" class="botao">Baixar .csv</button>
+      <button id="limpar" type="button" class="botao botao--perigo">Limpar</button>
+    </footer>
+    <p id="status" class="status"></p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

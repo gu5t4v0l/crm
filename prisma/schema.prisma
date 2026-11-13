@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EstagioLead {
+  NOVO
+  CONTATO
+  PROPOSTA
+  GANHO
+  PERDIDO
+}
+
+enum TipoAtividade {
+  NOTA
+  LIGACAO
+  EMAIL
+  REUNIAO
+  WHATSAPP
+  TAREFA
+}
+
+model Lead {
+  id            String      @id @default(cuid())
+  nome          String
+  empresa       String?
+  email         String?
+  telefone      String?
+  origem        String?
+  valor         Decimal?    @db.Decimal(12, 2)
+  estagio       EstagioLead @default(NOVO)
+  posicao       Int         @default(0)
+  responsavel   String?
+  observacao    String?
+  perdidoMotivo String?
+  fechadoEm     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  atividades Atividade[]
+
+  @@index([estagio, posicao])
+  @@index([origem])
+  @@index([createdAt])
+}
+
+model Atividade {
+  id        String        @id @default(cuid())
+  leadId    String
+  lead      Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tipo      TipoAtividade @default(NOTA)
+  descricao String
+  dataHora  DateTime      @default(now())
+  concluida Boolean       @default(false)
+  createdAt DateTime      @default(now())
+
+  @@index([leadId, dataHora])
+}
+
+/// Conta Google conectada no login. Uso pessoal: no máximo uma linha.
+/// Tokens ficam criptografados (AES-256-GCM, ver src/lib/crypto.ts).
+model ContaGoogle {
+  id           String   @id @default(cuid())
+  googleSub    String   @unique
+  email        String   @unique
+  accessToken  String
+  refreshToken String
+  expiraEm     DateTime
+  escopos      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ─── Módulo 1: Empresas e Contatos ───────────────────────────────────────────
+
+/// Ciclo de vida da empresa. "Em negociação" não é status: deriva de ter negócio aberto.
+enum StatusEmpresa {
+  PROSPECT
+  CLIENTE
+  EX_CLIENTE
+  DESCARTADA
+}
+
+enum Origem {
+  MAPS
+  INSTAGRAM
+  WHATSAPP
+  INDICACAO
+  PARCERIA
+  SITE
+  EVENTO
+  OUTRO
+}
+
+/// Âncora do CRM B2B. Campos de contato ficam normalizados para deduplicação
+/// (ver src/lib/normalizar.ts): cnpj só dígitos, telefone E.164, instagram sem @.
+model Empresa {
+  id          String        @id @default(cuid())
+  nome        String
+  segmento    String?
+  status      StatusEmpresa @default(PROSPECT)
+  origem      Origem?
+  cnpj        String?       @unique
+  telefone    String?
+  email       String?
+  site        String?
+  dominio     String?
+  instagram   String?
+  endereco    String?
+  cidade      String?
+  uf          String?       @db.Char(2)
+  observacao  String?
+  arquivadaEm DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  contatos Contato[]
+  negocios Negocio[]
+
+  @@index([arquivadaEm, status])
+  @@index([nome])
+  @@index([telefone])
+  @@index([dominio])
+  @@index([instagram])
+}
+
+/// Pessoa. Pode existir sem empresa (ex.: um parceiro que indica clientes).
+model Contato {
+  id          String    @id @default(cuid())
+  empresaId   String?
+  empresa     Empresa?  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  nome        String
+  cargo       String?
+  email       String?   @unique
+  telefone    String?
+  /// No máximo um principal por empresa (garantido no serviço).
+  principal   Boolean   @default(false)
+  observacao  String?
+  arquivadoEm DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  negocios NegocioContato[]
+
+  @@index([empresaId, arquivadoEm])
+  @@index([nome])
+  @@index([telefone])
+}
+
+// ─── Módulo 2: Pipelines, Etapas e Negócios ──────────────────────────────────
+
+/// ABERTA = em andamento. Todo pipeline tem exatamente uma GANHO e uma PERDIDO, sempre no fim.
+enum TipoEtapa {
+  ABERTA
+  GANHO
+  PERDIDO
+}
+
+/// Espelho do tipo da etapa atual — denormalizado para filtrar/medir sem join.
+enum StatusNegocio {
+  ABERTO
+  GANHO
+  PERDIDO
+}
+
+enum PapelContato {
+  DECISOR
+  INFLUENCIADOR
+  USUARIO
+  FINANCEIRO
+  OUTRO
+}
+
+model Pipeline {
+  id          String    @id @default(cuid())
+  nome        String
+  /// Exatamente um pipeline é o padrão (garantido no serviço).
+  padrao      Boolean   @default(false)
+  ordem       Int       @default(0)
+  arquivadoEm DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  etapas   Etapa[]
+  negocios Negocio[]
+}
+
+model Etapa {
+  id            String    @id @default(cuid())
+  pipelineId    String
+  pipeline      Pipeline  @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  nome          String
+  tipo          TipoEtapa @default(ABERTA)
+  ordem         Int
+  /// Chance de fechar (0–100), usada na previsão ponderada.
+  probabilidade Int?
+  cor           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  negocios Negocio[]
+  saidas   HistoricoEtapa[] @relation("HistoricoDe")
+  entradas HistoricoEtapa[] @relation("HistoricoPara")
+
+  /// Alvo da FK composta de Negocio: garante que a etapa pertence ao pipeline do negócio.
+  @@unique([pipelineId, id])
+  @@index([pipelineId, ordem])
+}
+
+model MotivoPerda {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  negocios Negocio[]
+}
+
+model Negocio {
+  id                 String        @id @default(cuid())
+  titulo             String
+  empresaId          String
+  empresa            Empresa       @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  pipelineId         String
+  pipeline           Pipeline      @relation(fields: [pipelineId], references: [id], onDelete: Restrict)
+  etapaId            String
+  etapa              Etapa         @relation(fields: [pipelineId, etapaId], references: [pipelineId, id], onDelete: Restrict)
+  status             StatusNegocio @default(ABERTO)
+  valor              Decimal       @default(0) @db.Decimal(12, 2)
+  previsaoFechamento DateTime?     @db.Date
+  origem             Origem?
+  /// Ordenação no kanban (fractional indexing, base 36): mover um card altera só ele.
+  rank               String
+  /// Quando entrou na etapa atual — base do "parado há X dias".
+  etapaDesde         DateTime      @default(now())
+  fechadoEm          DateTime?
+  motivoPerdaId      String?
+  motivoPerda        MotivoPerda?  @relation(fields: [motivoPerdaId], references: [id], onDelete: Restrict)
+  motivoPerdaDetalhe String?
+  observacao         String?
+  arquivadoEm        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  contatos  NegocioContato[]
+  historico HistoricoEtapa[]
+
+  @@index([pipelineId, etapaId, rank])
+  @@index([empresaId])
+  @@index([status, arquivadoEm])
+}
+
+model NegocioContato {
+  negocioId String
+  negocio   Negocio       @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  contatoId String
+  contato   Contato       @relation(fields: [contatoId], references: [id], onDelete: Restrict)
+  papel     PapelContato?
+
+  @@id([negocioId, contatoId])
+  @@index([contatoId])
+}
+
+/// Cada mudança de etapa. Guarda o tipo e o valor do momento para as métricas
+/// sobreviverem a etapas excluídas ou valores editados depois.
+model HistoricoEtapa {
+  id          String    @id @default(cuid())
+  negocioId   String
+  negocio     Negocio   @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  deEtapaId   String?
+  deEtapa     Etapa?    @relation("HistoricoDe", fields: [deEtapaId], references: [id], onDelete: SetNull)
+  paraEtapaId String?
+  paraEtapa   Etapa?    @relation("HistoricoPara", fields: [paraEtapaId], references: [id], onDelete: SetNull)
+  paraTipo    TipoEtapa
+  valor       Decimal   @db.Decimal(12, 2)
+  em          DateTime  @default(now())
+
+  @@index([negocioId, em])
+  @@index([paraEtapaId, em])
+}

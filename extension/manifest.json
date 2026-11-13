@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Limaware CRM — Captura de Leads",
+  "version": "1.0.0",
+  "description": "Captura leads no Google Maps e no Instagram e exporta em CSV para o CRM.",
+  "permissions": ["storage", "clipboardWrite"],
+  "action": {
+    "default_title": "Leads capturados",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.google.com/maps/*", "https://www.google.com.br/maps/*"],
+      "js": ["content/shared.js", "content/maps.js"],
+      "css": ["content/overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.instagram.com/*"],
+      "js": ["content/shared.js", "content/instagram.js"],
+      "css": ["content/overlay.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

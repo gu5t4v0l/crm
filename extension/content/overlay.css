@@ -1,0 +1,66 @@
+.crm-barra {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #0f172a;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.crm-barra__titulo {
+  padding-right: 2px;
+  color: #5eead4;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.crm-barra__botao {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.crm-barra__botao:hover:not(:disabled) {
+  background: #334155;
+}
+
+.crm-barra__botao:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.crm-aviso {
+  position: fixed;
+  right: 16px;
+  bottom: 64px;
+  z-index: 2147483000;
+  max-width: 280px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.15s, transform 0.15s;
+  pointer-events: none;
+}
+
+.crm-aviso--visivel {
+  opacity: 1;
+  transform: translateY(0);
+}
